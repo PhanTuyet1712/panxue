@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>鼓浪屿打卡任务闯关</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'SimSun', '宋体', serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #quiz-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 700px;
+            text-align: left;
+        }
+        .hidden { display: none; }
+        .option-button, .start-button, .next-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option-button:hover, .start-button:hover, .next-button:hover {
+            background-color: #d0d0d0;
+        }
+        #message {
+            margin-top: 10px;
+            color: red;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        #student-info input {
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="quiz-container">
+
+    <!-- Giao diện nhập thông tin -->
+    <div id="screen-0">
+        <h2>第一关：最美转角</h2>
+        <div id="student-info">
+            <input type="text" id="student-name" placeholder="请输入姓名">
+            <input type="text" id="student-id" placeholder="请输入学号">
+            <button class="start-button" onclick="startQuiz()">进入任务</button>
+        </div>
+    </div>
+
+    <!-- Các màn câu hỏi và upload ảnh được tạo động -->
+</div>
+
+<script>
+const stages = [
+    {
+        title: "第一关：最美转角",
+        question: "鼓浪屿的最美转角距离以下哪个码头最近？",
+        options: ["A. 三丘田码头", "B. 内厝澳码头", "C. 钢琴码头", "D. 嵩鼓码头"],
+        answer: 2,
+        tip: "提示词：24.442，118.067",
+        imagePrompt: "请上传与“彩色墙面+复古路灯”的合影照片："
+    },
+    {
+        title: "第二关：皓月园",
+        question: "民间流传 “遇见郑成功，万事都____。”",
+        options: ["A. 顺利", "B. 成功", "C. 如意", "D. 有希望"],
+        answer: 1,
+        tip: "提示词：太阳",
+        imagePrompt: "请上传与“郑成功雕像”的合影照片："
+    },
+    {
+        title: "第三关：钢琴博物馆",
+        question: "请问你在馆内看到最喜欢的钢琴名称是？",
+        input: true,
+        tip: "提示词：高",
+        imagePrompt: "请上传你与那架钢琴的合照（弹琴姿势）："
+    },
+    {
+        title: "第四关：菽庄花园",
+        question: "判断对错：菽庄花园中‘十二洞天’每个洞上都刻有12星座的图案。",
+        options: ["对", "错"],
+        answer: 1,
+        tip: "提示词：图片 + 坐标 = 日光岩",
+        imagePrompt: "请上传你在菽庄花园拍摄的照片："
+    },
+    {
+        title: "第五关：最终任务",
+        imageOnly: true,
+        imageSrc: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Riguang_Yan.JPG/640px-Riguang_Yan.JPG",
+        caption: "请观察图片并猜测最终任务地点"
+    }
+];
+
+let currentStage = 0;
+let studentName = "", studentID = "";
+
+function startQuiz() {
+    studentName = document.getElementById("student-name").value.trim();
+    studentID = document.getElementById("student-id").value.trim();
+    if (!studentName || !studentID) {
+        alert("请输入完整信息！");
+        return;
+    }
+    document.getElementById("screen-0").remove();
+    loadStage();
+}
+
+function loadStage() {
+    const container = document.getElementById("quiz-container");
+    container.innerHTML = "";
+    const stage = stages[currentStage];
+
+    const wrapper = document.createElement("div");
+
+    const title = document.createElement("h2");
+    title.textContent = stage.title;
+    wrapper.appendChild(title);
+
+    if (stage.question) {
+        const q = document.createElement("p");
+        q.textContent = stage.question;
+        wrapper.appendChild(q);
+
+        if (stage.input) {
+            const input = document.createElement("input");
+            input.id = "text-answer";
+            input.placeholder = "请输入答案";
+            wrapper.appendChild(input);
+        } else {
+            stage.options.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "option-button";
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(idx === stage.answer);
+                wrapper.appendChild(btn);
+            });
+        }
+
+        if (stage.input) {
+            const btn = document.createElement("button");
+            btn.className = "next-button";
+            btn.textContent = "提交";
+            btn.onclick = () => {
+                const val = document.getElementById("text-answer").value.trim();
+                if (val) handleAnswer(true);
+                else alert("请输入答案！");
+            };
+            wrapper.appendChild(btn);
+        }
+
+        const msg = document.createElement("div");
+        msg.id = "message";
+        wrapper.appendChild(msg);
+
+    } else if (stage.imageOnly) {
+        const img = document.createElement("img");
+        img.src = stage.imageSrc;
+        img.alt = "提示图";
+        img.style = "width: 100%; margin-bottom: 10px;";
+        wrapper.appendChild(img);
+
+        const p = document.createElement("p");
+        p.textContent = stage.caption;
+        wrapper.appendChild(p);
+
+        const next = document.createElement("button");
+        next.className = "next-button";
+        next.textContent = "提交答案并完成";
+        next.onclick = () => showSuccess();
+        wrapper.appendChild(next);
+    }
+
+    container.appendChild(wrapper);
+}
+
+function handleAnswer(correct) {
+    const msg = document.getElementById("message");
+    if (!correct) {
+        currentStage++;
+        loadStage(); // skip image upload if incorrect
+    } else {
+        msg.style.color = "green";
+        msg.textContent = "回答正确，请继续上传照片";
+        setTimeout(showUploadScreen, 1200);
+    }
+}
+
+function showUploadScreen() {
+    const container = document.getElementById("quiz-container");
+    const stage = stages[currentStage];
+    container.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+
+    const h = document.createElement("h3");
+    h.textContent = "任务2：上传照片";
+    wrapper.appendChild(h);
+
+    const p = document.createElement("p");
+    p.textContent = stage.imagePrompt;
+    wrapper.appendChild(p);
+
+    const file = document.createElement("input");
+    file.type = "file";
+    file.accept = "image/*";
+    file.id = "img-upload";
+    wrapper.appendChild(file);
+
+    const next = document.createElement("button");
+    next.className = "next-button";
+    next.textContent = "提交照片并继续";
+    next.onclick = () => {
+        if (!file.files.length) {
+            alert("请上传照片！");
+            return;
+        }
+        showTip(stage.tip);
+    };
+    wrapper.appendChild(next);
+
+    container.appendChild(wrapper);
+}
+
+function showTip(tipText) {
+    const container = document.getElementById("quiz-container");
+    container.innerHTML = "";
+
+    const h = document.createElement("h3");
+    h.textContent = "🎉 恭喜完成本关";
+    container.appendChild(h);
+
+    const tip = document.createElement("p");
+    tip.innerHTML = "<strong>" + tipText + "</strong>";
+    container.appendChild(tip);
+
+    const next = document.createElement("button");
+    next.className = "next-button";
+    next.textContent = "进入下一关";
+    next.onclick = () => {
+        currentStage++;
+        loadStage();
+    };
+    container.appendChild(next);
+}
+
+function showSuccess() {
+    const container = document.getElementById("quiz-container");
+    container.innerHTML = `
+        <h2>🎯 最终任务：寻宝成功！</h2>
+        <p>恭喜 ${studentName} 同学，你已完成所有任务！</p>
+    `;
+}
+</script>
+</body>
+</html>
